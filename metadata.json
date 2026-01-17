@@ -1,0 +1,5 @@
+{
+  "name": "Void Knight",
+  "description": "A web-based action platformer inspired by Hollow Knight. Features tight controls, combat, and AI-generated lore.",
+  "requestFramePermissions": []
+}
