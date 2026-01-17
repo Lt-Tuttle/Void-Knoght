@@ -3,25 +3,25 @@ import { GameCanvas } from './components/GameCanvas';
 import { UIOverlay } from './components/UIOverlay';
 import { LoreModal } from './components/LoreModal';
 import { GameState, Player, LoreTablet } from './types';
+import { useInput } from './hooks/useInput';
 
 function App() {
   const [gameState, setGameState] = useState<GameState>(GameState.MENU);
   const [playerState, setPlayerState] = useState<Player | null>(null);
   const [activeTablet, setActiveTablet] = useState<LoreTablet | null>(null);
+  
+  // Lift input state so UI can write to it (touch) and Canvas can read it (game loop)
+  const inputRef = useInput();
 
   const handleStart = () => {
     setGameState(GameState.PLAYING);
   };
 
   const handleRestart = () => {
-    // Ideally we would reset the engine here. 
-    // For this prototype, reloading the window or re-mounting the canvas works.
     window.location.reload(); 
   };
 
   const handlePlayerUpdate = useCallback((p: Player) => {
-    // Only update React state if strictly necessary to avoid lag
-    // Debouncing or checking diffs could help performance
     setPlayerState(prev => {
         if (!prev) return p;
         if (prev.health !== p.health || Math.abs(prev.soul - p.soul) > 1) {
@@ -33,8 +33,6 @@ function App() {
 
   const handleLoreInteract = (tablet: LoreTablet) => {
     setActiveTablet(tablet);
-    // Game loop automatically pauses/switches state via prop in GameCanvas
-    // We just need to handle the UI here
   };
 
   const closeLore = () => {
@@ -43,12 +41,13 @@ function App() {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-slate-950 select-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-slate-950 select-none touch-none">
       <GameCanvas 
         gameState={gameState} 
         setGameState={setGameState}
         onPlayerUpdate={handlePlayerUpdate}
         onLoreInteract={handleLoreInteract}
+        inputRef={inputRef}
       />
       
       <UIOverlay 
@@ -56,6 +55,7 @@ function App() {
         player={playerState} 
         onStart={handleStart}
         onRestart={handleRestart}
+        inputRef={inputRef}
       />
 
       {gameState === GameState.LORE_READING && (
